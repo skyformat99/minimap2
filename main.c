@@ -8,7 +8,7 @@
 #include "minimap.h"
 #include "mmpriv.h"
 
-#define MM_VERSION "2.0-r194-dirty"
+#define MM_VERSION "2.0-r195-dirty"
 
 void liftrlimit()
 {
@@ -31,6 +31,7 @@ static struct option long_options[] = {
 	{ "max-chain-skip", required_argument, 0, 0 },
 	{ "min-dp-len",     required_argument, 0, 0 },
 	{ "bw-ext",         required_argument, 0, 0 },
+	{ "pen-ext",        required_argument, 0, 0 },
 	{ "version",        no_argument,       0, 'V' },
 	{ "min-count",      required_argument, 0, 'n' },
 	{ "min-chain-score",required_argument, 0, 'm' },
@@ -88,6 +89,7 @@ int main(int argc, char *argv[])
 		else if (c == 0 && long_idx == 7) opt.max_chain_skip = atoi(optarg); // --max-chain-skip
 		else if (c == 0 && long_idx == 8) opt.min_ksw_len = atoi(optarg); // --min-dp-len
 		else if (c == 0 && long_idx == 9) opt.bw_ext = atoi(optarg); // --bw-ext
+		else if (c == 0 && long_idx ==10) opt.pen_ext = atoi(optarg); // --pen-ext
 		else if (c == 'V') {
 			puts(MM_VERSION);
 			return 0;

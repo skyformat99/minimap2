@@ -81,7 +81,7 @@ typedef struct {
 	int bw;      // bandwidth
 	int max_gap; // break a chain if there are no minimizers in a max_gap window
 	int max_chain_skip;
-	int min_cnt;
+	int min_cnt; // min number of minimizer matches
 	int min_chain_score;
 	int bw_ext;  // extension bandwidth
 
@@ -93,6 +93,7 @@ typedef struct {
 	int min_join_flank_sc;
 
 	int a, b, q, e, q2, e2; // matching score, mismatch, gap-open and gap-ext penalties
+	int pen_ext; // mismatch and gap cost for extension
 	int zdrop;
 	int min_dp_max;
 	int min_ksw_len;

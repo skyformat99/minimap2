@@ -127,7 +127,7 @@ static void mm_append_cigar(mm_reg1_t *r, uint32_t n_cigar, uint32_t *cigar) // 
 static void mm_align_pair(void *km, const mm_mapopt_t *opt, int qlen, const uint8_t *qseq, int tlen, const uint8_t *tseq, const int8_t *mat, int w, int flag, ksw_extz_t *ez)
 {
 	if (flag < 0) { // linear gap extension
-		ksw_extf2_sse(km, qlen, qseq, tlen, tseq, 1, 2, 2, w, opt->zdrop, ez); // NB: fixed scoring
+		ksw_extf2_sse(km, qlen, qseq, tlen, tseq, 1, opt->pen_ext, opt->pen_ext, w, 100, ez); // NB: fixed scoring
 	} else if (opt->q == opt->q2 && opt->e == opt->e2) { // affine gap cost
 		ksw_extz2_sse(km, qlen, qseq, tlen, tseq, 5, mat, opt->q, opt->e, w, opt->zdrop, flag, ez);
 	} else { // double affine cost
