@@ -39,8 +39,8 @@ typedef struct {
  * @param mat       m*m scoring mattrix in one-dimension array
  * @param gapo      gap open penalty; a gap of length l cost "-(gapo+l*gape)"
  * @param gape      gap extension penalty
- * @param w         band width
- * @param zdrop     off-diagonal drop-off to stop extension (positive)
+ * @param w         band width (<0 to disable)
+ * @param zdrop     off-diagonal drop-off to stop extension (positive; <0 to disable)
  * @param flag      flag (see KSW_EZ_* macros)
  * @param ez        (out) scores and cigar
  */
@@ -52,6 +52,8 @@ void ksw_extd(void *km, int qlen, const uint8_t *query, int tlen, const uint8_t 
 
 void ksw_extd2_sse(void *km, int qlen, const uint8_t *query, int tlen, const uint8_t *target, int8_t m, const int8_t *mat,
 				   int8_t gapo, int8_t gape, int8_t gapo2, int8_t gape2, int w, int zdrop, int flag, ksw_extz_t *ez);
+
+void ksw_extf2_sse(void *km, int qlen, const uint8_t *query, int tlen, const uint8_t *target, int8_t mch, int8_t mis, int8_t e, int w, int xdrop, ksw_extz_t *ez);
 
 /**
  * Global alignment

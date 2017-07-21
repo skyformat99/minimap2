@@ -247,8 +247,11 @@ mm_reg1_t *mm_map_frag(const mm_mapopt_t *opt, const mm_idx_t *mi, mm_tbuf_t *b,
 		mm_select_sub(b->km, opt->mask_level, opt->pri_ratio, opt->best_n, n_regs, regs);
 		mm_join_long(b->km, opt, qlen, n_regs, regs, a); // TODO: this can be applied to all-vs-all in principle
 	}
-	if (opt->flag & MM_F_CIGAR) {
-		regs = mm_align_skeleton(b->km, opt, mi, qlen, seq, n_regs, regs, a); // this calls mm_filter_regs()
+	if (opt->flag & (MM_F_CIGAR|MM_F_EXT_END)) {
+		if (opt->flag & MM_F_CIGAR)
+			regs = mm_align_skeleton(b->km, opt, mi, qlen, seq, n_regs, regs, a); // this calls mm_filter_regs()
+		else
+			mm_extend_skeleton(b->km, opt, mi, qlen, seq, *n_regs, regs, a);
 		if (!(opt->flag & MM_F_AVA)) {
 			mm_set_parent(b->km, opt->mask_level, *n_regs, regs);
 			mm_select_sub(b->km, opt->mask_level, opt->pri_ratio, opt->best_n, n_regs, regs);

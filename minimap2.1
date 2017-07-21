@@ -1,4 +1,4 @@
-.TH minimap2 1 "19 July 2017" "minimap2-2.0-r190-dirty" "Bioinformatics tools"
+.TH minimap2 1 "21 July 2017" "minimap2-2.0-r193-dirty" "Bioinformatics tools"
 .SH NAME
 .PP
 minimap2 - mapping and alignment between collections of DNA sequences
@@ -173,6 +173,21 @@ on chains. Set
 to a large number to switch off this heurstics.
 .SS Alignment options
 .TP 10
+.B -a
+Generate CIGAR and output alignments in the SAM format. Minimap2 outputs in PAF
+by default.
+.TP
+.B -c
+Generate CIGAR. In PAF, the CIGAR is written to the `cg' custom tag.
+.TP
+.B -e
+Extend the ends of mappings with a linear gap cost function. No CIGAR recorded.
+In this mode, minimap2 extends at most
+.RB { -g }*2
+bases from either end of the mapping, using a bandwidth
+.RB { -r }/2.
+The scoring function is hardcoded: 1 for match, 2 for mismatch and 2 for gap.
+.TP 10
 .BI -A \ INT
 Matching score [2]
 .TP
@@ -205,13 +220,6 @@ and may be different from the total alignment score.
 .TP 10
 .B -Q
 Ignore base quality in the input file.
-.TP
-.B -a
-Generate CIGAR and output alignments in the SAM format. Minimap2 outputs in PAF
-by default.
-.TP
-.B -c
-Generate CIGAR. In PAF, the CIGAR is written to the `cg' custom tag.
 .TP
 .BI -t \ INT
 Number of threads [3]. Minimap2 uses at most three threads when indexing target

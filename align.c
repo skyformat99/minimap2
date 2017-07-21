@@ -126,10 +126,13 @@ static void mm_append_cigar(mm_reg1_t *r, uint32_t n_cigar, uint32_t *cigar) // 
 
 static void mm_align_pair(void *km, const mm_mapopt_t *opt, int qlen, const uint8_t *qseq, int tlen, const uint8_t *tseq, const int8_t *mat, int w, int flag, ksw_extz_t *ez)
 {
-	if (opt->q == opt->q2 && opt->e == opt->e2)
+	if (flag < 0) { // linear gap extension
+		ksw_extf2_sse(km, qlen, qseq, tlen, tseq, 1, 2, 2, w, opt->zdrop, ez); // NB: fixed scoring
+	} else if (opt->q == opt->q2 && opt->e == opt->e2) { // affine gap cost
 		ksw_extz2_sse(km, qlen, qseq, tlen, tseq, 5, mat, opt->q, opt->e, w, opt->zdrop, flag, ez);
-	else
+	} else { // double affine cost
 		ksw_extd2_sse(km, qlen, qseq, tlen, tseq, 5, mat, opt->q, opt->e, opt->q2, opt->e2, w, opt->zdrop, flag, ez);
+	}
 }
 
 static inline int mm_get_hplen_back(const mm_idx_t *mi, uint32_t rid, uint32_t x)
@@ -330,4 +333,68 @@ mm_reg1_t *mm_align_skeleton(void *km, const mm_mapopt_t *opt, const mm_idx_t *m
 	mm_filter_regs(km, opt, n_regs_, regs);
 	mm_hit_sort_by_dp(km, n_regs_, regs);
 	return regs;
+}
+
+static void mm_end_extend1(void *km, const mm_mapopt_t *opt, const mm_idx_t *mi, int qlen, uint8_t *qseq0[2], mm_reg1_t *r, mm128_t *a, ksw_extz_t *ez)
+{
+	int32_t rid = a[r->as].x<<1>>33, rev = a[r->as].x>>63;
+	uint8_t *tseq, *qseq;
+	int32_t rs, re, qs, qe, rlen = mi->seq[rid].len;
+	int8_t mat[25];
+
+	if (r->cnt == 0) return;
+	mm_adjust_minier(mi, qseq0, &a[r->as], &rs, &qs);
+	mm_adjust_minier(mi, qseq0, &a[r->as + r->cnt - 1], &re, &qe);
+
+	ksw_gen_simple_mat(5, mat, opt->a, opt->b);
+	tseq = (uint8_t*)kmalloc(km, opt->max_gap * 2);
+
+	if (qs > 0 && rs > 0) { // left extension
+		int l = qs < rs? qs : rs;
+		l = l < opt->max_gap * 2? l : opt->max_gap * 2;
+		qseq = &qseq0[rev][qs - l];
+		mm_idx_getseq(mi, rid, rs - l, rs, tseq);
+		mm_seq_rev(l, qseq);
+		mm_seq_rev(l, tseq);
+		mm_align_pair(km, opt, l, qseq, l, tseq, mat, opt->bw>>1, -1, ez);
+		rs -= ez->max_t + 1;
+		qs -= ez->max_q + 1;
+		mm_seq_rev(l, qseq);
+	}
+	assert(qs >= 0 && rs >= 0);
+
+	if (qlen - qe > 100 && rlen - re > 100) { // right extension
+		int l = qlen - qe < rlen - re? qlen - qe : rlen - re;
+		l = l < opt->max_gap * 2? l : opt->max_gap * 2;
+		qseq = &qseq0[rev][qe];
+		mm_idx_getseq(mi, rid, re, re + l, tseq);
+		mm_align_pair(km, opt, l, qseq, l, tseq, mat, opt->bw>>1, -1, ez);
+		re += ez->max_t + 1;
+		qe += ez->max_q + 1;
+	}
+	assert(qe <= qlen);
+
+	r->rs = rs, r->re = re;
+	if (rev) r->qs = qlen - qe, r->qe = qlen - qs;
+	else r->qs = qs, r->qe = qe;
+	kfree(km, tseq);
+}
+
+void mm_extend_skeleton(void *km, const mm_mapopt_t *opt, const mm_idx_t *mi, int qlen, const char *qstr, int n_regs, mm_reg1_t *regs, mm128_t *a)
+{
+	extern unsigned char seq_nt4_table[256];
+	int32_t i, r;
+	uint8_t *qseq0[2];
+	ksw_extz_t ez;
+
+	qseq0[0] = (uint8_t*)kmalloc(km, qlen);
+	qseq0[1] = (uint8_t*)kmalloc(km, qlen);
+	for (i = 0; i < qlen; ++i) {
+		qseq0[0][i] = seq_nt4_table[(uint8_t)qstr[i]];
+		qseq0[1][qlen - 1 - i] = qseq0[0][i] < 4? 3 - qseq0[0][i] : 4;
+	}
+	memset(&ez, 0, sizeof(ksw_extz_t));
+	for (r = 0; r < n_regs; ++r)
+		mm_end_extend1(km, opt, mi, qlen, qseq0, &regs[r], a, &ez);
+	kfree(km, qseq0[0]); kfree(km, qseq0[1]);
 }

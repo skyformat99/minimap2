@@ -8,7 +8,7 @@
 #include "minimap.h"
 #include "mmpriv.h"
 
-#define MM_VERSION "2.0-r192-dirty"
+#define MM_VERSION "2.0-r193-dirty"
 
 void liftrlimit()
 {
@@ -53,7 +53,7 @@ int main(int argc, char *argv[])
 	mm_realtime0 = realtime();
 	mm_mapopt_init(&opt);
 
-	while ((c = getopt_long(argc, argv, "aw:k:K:t:r:f:Vv:g:I:d:XT:s:x:Hcp:M:n:z:A:B:O:E:m:N:Q", long_options, &long_idx)) >= 0) {
+	while ((c = getopt_long(argc, argv, "acew:k:K:t:r:f:Vv:g:I:d:XT:s:x:Hp:M:n:z:A:B:O:E:m:N:Q", long_options, &long_idx)) >= 0) {
 		if (c == 'w') w = atoi(optarg), idx_par_set = 1;
 		else if (c == 'k') k = atoi(optarg), idx_par_set = 1;
 		else if (c == 'H') is_hpc = 1, idx_par_set = 1;
@@ -69,6 +69,7 @@ int main(int argc, char *argv[])
 		else if (c == 'c') opt.flag |= MM_F_CIGAR;
 		else if (c == 'X') opt.flag |= MM_F_AVA | MM_F_NO_SELF;
 		else if (c == 'a') opt.flag |= MM_F_OUT_SAM | MM_F_CIGAR;
+		else if (c == 'e') opt.flag |= MM_F_EXT_END;
 		else if (c == 'Q') opt.flag |= MM_F_NO_QUAL;
 		else if (c == 'T') opt.sdust_thres = atoi(optarg);
 		else if (c == 'n') opt.min_cnt = atoi(optarg);
@@ -154,6 +155,9 @@ int main(int argc, char *argv[])
 		fprintf(stderr, "    -p FLOAT     min secondary-to-primary score ratio [%g]\n", opt.pri_ratio);
 		fprintf(stderr, "    -N INT       retain at most INT secondary alignments [%d]\n", opt.best_n);
 		fprintf(stderr, "  Alignment:\n");
+		fprintf(stderr, "    -a           output in the SAM format (PAF by default)\n");
+		fprintf(stderr, "    -c           output CIGAR in PAF\n");
+		fprintf(stderr, "    -e           extend ends with DP, but no CIGAR (overridden by -a/-c)\n");
 		fprintf(stderr, "    -A INT       matching score [%d]\n", opt.a);
 		fprintf(stderr, "    -B INT       mismatch penalty [%d]\n", opt.b);
 		fprintf(stderr, "    -O INT[,INT] gap open penalty [%d,%d]\n", opt.q, opt.q2);
@@ -162,8 +166,6 @@ int main(int argc, char *argv[])
 		fprintf(stderr, "    -s INT       minimal peak DP alignment score [%d]\n", opt.min_dp_max);
 		fprintf(stderr, "  Input/Output:\n");
 		fprintf(stderr, "    -Q           ignore base quality in the input\n");
-		fprintf(stderr, "    -a           output in the SAM format (PAF by default)\n");
-		fprintf(stderr, "    -c           output CIGAR in PAF\n");
 		fprintf(stderr, "    -t INT       number of threads [%d]\n", n_threads);
 		fprintf(stderr, "    -K NUM       minibatch size [200M]\n");
 //		fprintf(stderr, "    -v INT       verbose level [%d]\n", mm_verbose);
