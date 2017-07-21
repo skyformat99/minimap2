@@ -1,4 +1,4 @@
-.TH minimap2 1 "21 July 2017" "minimap2-2.0-r193-dirty" "Bioinformatics tools"
+.TH minimap2 1 "21 July 2017" "minimap2-2.0-r194-dirty" "Bioinformatics tools"
 .SH NAME
 .PP
 minimap2 - mapping and alignment between collections of DNA sequences
@@ -216,6 +216,13 @@ the contiguity of the alignment at the cost of poor alignment in the middle
 Minimal peak DP alignment score to output [40]. The peak score is computed from
 the final CIGAR. It is the score of the max scoring segment in the alignment
 and may be different from the total alignment score.
+.TP
+.BI --bw-ext \ INT
+Bandwidth used for score-only extension [100]. This option is only effective with
+.BR -e .
+CIGAR generation uses
+.B -r
+for banding.
 .SS Input/output options
 .TP 10
 .B -Q

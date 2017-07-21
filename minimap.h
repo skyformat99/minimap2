@@ -78,11 +78,12 @@ typedef struct {
 	int sdust_thres;  // score threshold for SDUST; 0 to disable
 	int flag;    // see MM_F_* macros
 
-	int bw;  // bandwidth
+	int bw;      // bandwidth
 	int max_gap; // break a chain if there are no minimizers in a max_gap window
 	int max_chain_skip;
 	int min_cnt;
 	int min_chain_score;
+	int bw_ext;  // extension bandwidth
 
 	float mask_level;
 	float pri_ratio;

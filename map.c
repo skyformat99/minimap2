@@ -20,6 +20,7 @@ void mm_mapopt_init(mm_mapopt_t *opt)
 	opt->bw = 500;
 	opt->max_gap = 5000;
 	opt->max_chain_skip = 25;
+	opt->bw_ext = 100;
 
 	opt->mask_level = 0.5f;
 	opt->pri_ratio = 0.8f;

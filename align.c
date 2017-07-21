@@ -356,7 +356,7 @@ static void mm_end_extend1(void *km, const mm_mapopt_t *opt, const mm_idx_t *mi,
 		mm_idx_getseq(mi, rid, rs - l, rs, tseq);
 		mm_seq_rev(l, qseq);
 		mm_seq_rev(l, tseq);
-		mm_align_pair(km, opt, l, qseq, l, tseq, mat, opt->bw>>1, -1, ez);
+		mm_align_pair(km, opt, l, qseq, l, tseq, mat, opt->bw_ext, -1, ez);
 		rs -= ez->max_t + 1;
 		qs -= ez->max_q + 1;
 		mm_seq_rev(l, qseq);
@@ -368,7 +368,7 @@ static void mm_end_extend1(void *km, const mm_mapopt_t *opt, const mm_idx_t *mi,
 		l = l < opt->max_gap * 2? l : opt->max_gap * 2;
 		qseq = &qseq0[rev][qe];
 		mm_idx_getseq(mi, rid, re, re + l, tseq);
-		mm_align_pair(km, opt, l, qseq, l, tseq, mat, opt->bw>>1, -1, ez);
+		mm_align_pair(km, opt, l, qseq, l, tseq, mat, opt->bw_ext, -1, ez);
 		re += ez->max_t + 1;
 		qe += ez->max_q + 1;
 	}
