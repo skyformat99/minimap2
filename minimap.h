@@ -93,9 +93,9 @@ typedef struct {
 	int min_join_flank_sc;
 
 	int a, b, q, e, q2, e2; // matching score, mismatch, gap-open and gap-ext penalties
-	int pen_ext; // mismatch and gap cost for extension
 	int zdrop;
 	int min_dp_max;
+	float min_iden; // only used for score-only extension
 	int min_ksw_len;
 
 	int max_occ;

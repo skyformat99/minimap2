@@ -31,9 +31,9 @@ void mm_mapopt_init(mm_mapopt_t *opt)
 	opt->min_join_flank_sc = 1000;
 
 	opt->a = 2, opt->b = 4, opt->q = 4, opt->e = 2, opt->q2 = 24, opt->e2 = 1;
-	opt->pen_ext = 3;
 	opt->zdrop = 400;
 	opt->min_dp_max = opt->min_chain_score;
+	opt->min_iden = 0.80f; // for now, only used for score-only extension
 	opt->min_ksw_len = 200;
 }
 

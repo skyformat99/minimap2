@@ -127,7 +127,7 @@ static void mm_append_cigar(mm_reg1_t *r, uint32_t n_cigar, uint32_t *cigar) // 
 static void mm_align_pair(void *km, const mm_mapopt_t *opt, int qlen, const uint8_t *qseq, int tlen, const uint8_t *tseq, const int8_t *mat, int w, int flag, ksw_extz_t *ez)
 {
 	if (flag < 0) { // linear gap extension
-		ksw_extf2_sse(km, qlen, qseq, tlen, tseq, 1, opt->pen_ext, opt->pen_ext, w, 100, ez); // NB: fixed scoring
+		ksw_extf2_sse(km, qlen, qseq, tlen, tseq, 1, 2, 2, w, 50, ez); // NB: fixed scoring
 	} else if (opt->q == opt->q2 && opt->e == opt->e2) { // affine gap cost
 		ksw_extz2_sse(km, qlen, qseq, tlen, tseq, 5, mat, opt->q, opt->e, w, opt->zdrop, flag, ez);
 	} else { // double affine cost
@@ -340,43 +340,47 @@ static void mm_end_extend1(void *km, const mm_mapopt_t *opt, const mm_idx_t *mi,
 	int32_t rid = a[r->as].x<<1>>33, rev = a[r->as].x>>63;
 	uint8_t *tseq, *qseq;
 	int32_t rs, re, qs, qe, rlen = mi->seq[rid].len;
-	int8_t mat[25];
 
-	if (r->cnt == 0) return;
+	if (r->cnt < 2) return;
 	mm_adjust_minier(mi, qseq0, &a[r->as], &rs, &qs);
 	mm_adjust_minier(mi, qseq0, &a[r->as + r->cnt - 1], &re, &qe);
+	tseq = (uint8_t*)kmalloc(km, opt->max_gap);
 
-	ksw_gen_simple_mat(5, mat, opt->a, opt->b);
-	tseq = (uint8_t*)kmalloc(km, opt->max_gap * 2);
-
-	if (qs > 0 && rs > 0) { // left extension
+	if (qs > 100 && rs > 100) { // left extension
 		int l = qs < rs? qs : rs;
-		l = l < opt->max_gap * 2? l : opt->max_gap * 2;
+		l = l < opt->max_gap? l : opt->max_gap;
 		qseq = &qseq0[rev][qs - l];
 		mm_idx_getseq(mi, rid, rs - l, rs, tseq);
 		mm_seq_rev(l, qseq);
 		mm_seq_rev(l, tseq);
-		mm_align_pair(km, opt, l, qseq, l, tseq, mat, opt->bw_ext, -1, ez);
-		rs -= ez->max_t + 1;
-		qs -= ez->max_q + 1;
+		mm_align_pair(km, opt, l, qseq, l, tseq, 0, opt->bw_ext, -1, ez);
 		mm_seq_rev(l, qseq);
+		l = (ez->max_t > ez->max_q? ez->max_t : ez->max_q) + 1;
+		if (ez->max > 0 && l > 0 && ((float)ez->max / l + 2) / 3 >= opt->min_iden) {
+			rs -= ez->max_t + 1;
+			qs -= ez->max_q + 1;
+			assert(qs >= 0 && rs >= 0);
+			r->rs = rs;
+			if (rev) r->qe = qlen - qs;
+			else r->qs = qs;
+		}
 	}
-	assert(qs >= 0 && rs >= 0);
-
 	if (qlen - qe > 100 && rlen - re > 100) { // right extension
 		int l = qlen - qe < rlen - re? qlen - qe : rlen - re;
-		l = l < opt->max_gap * 2? l : opt->max_gap * 2;
+		l = l < opt->max_gap? l : opt->max_gap;
 		qseq = &qseq0[rev][qe];
 		mm_idx_getseq(mi, rid, re, re + l, tseq);
-		mm_align_pair(km, opt, l, qseq, l, tseq, mat, opt->bw_ext, -1, ez);
-		re += ez->max_t + 1;
-		qe += ez->max_q + 1;
+		mm_align_pair(km, opt, l, qseq, l, tseq, 0, opt->bw_ext, -1, ez);
+		l = (ez->max_t > ez->max_q? ez->max_t : ez->max_q) + 1;
+		if (ez->max > 0 && l > 0 && ((float)ez->max / l + 2) / 3 >= opt->min_iden) {
+			re += ez->max_t + 1;
+			qe += ez->max_q + 1;
+			assert(qe <= qlen && re <= rlen);
+			r->re = re;
+			if (rev) r->qs = qlen - qe;
+			else r->qe = qe;
+		}
 	}
-	assert(qe <= qlen);
-
-	r->rs = rs, r->re = re;
-	if (rev) r->qs = qlen - qe, r->qe = qlen - qs;
-	else r->qs = qs, r->qe = qe;
 	kfree(km, tseq);
 }
 
